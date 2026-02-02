@@ -4,7 +4,7 @@ LLM-driven Chromium runner using Playwright. Supports Ollama locally and Azure O
 
 ## Quick start
 
-1) Install dependencies
+1. Install dependencies
 
 ```
 python -m venv .venv
@@ -14,7 +14,7 @@ python -m pip install -r requirements-dev.txt
 python -m playwright install chromium
 ```
 
-2) Configure LLM
+2. Configure LLM
 
 ### Ollama (local)
 
@@ -32,7 +32,7 @@ set AZURE_OPENAI_DEPLOYMENT=YOUR_DEPLOYMENT
 set AZURE_OPENAI_API_VERSION=2024-06-01
 ```
 
-3) Run
+3. Run
 
 ```
 python -m app.main --task "Find the pricing page and extract the plan names" --provider ollama
@@ -51,7 +51,7 @@ set LOG_LEVEL=DEBUG
 Run with a task:
 
 ```
-python -m app.main --task "Find the pricing page and extract the plan names" --provider ollama
+python -m app.main --task "Open website and try to novaigate the website and find the lunch menu. Once you found it, try to extract the content of the lunch menu in a json [{`"meal`": `"food`", `"price`": 5.3}]" --config config.local.jsonc
 ```
 
 Run with config:
@@ -140,10 +140,10 @@ The LLM must return JSON only:
 ```json
 {
   "actions": [
-    {"type": "goto", "url": "https://example.com"},
-    {"type": "click", "selector": "a[href*='pricing']"},
-    {"type": "scroll", "direction": "down", "pixels": 900},
-    {"type": "extract", "selector": "main", "name": "main_content"}
+    { "type": "goto", "url": "https://example.com" },
+    { "type": "click", "selector": "a[href*='pricing']" },
+    { "type": "scroll", "direction": "down", "pixels": 900 },
+    { "type": "extract", "selector": "main", "name": "main_content" }
   ]
 }
 ```

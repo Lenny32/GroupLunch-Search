@@ -46,12 +46,14 @@ class ActionRunner:
         screenshot_each_step: bool = True,
         step_delay_s: float = 0.5,
         text_limit: int = 4000,
+        html_limit: int = 12000,
     ):
         self.agent = agent
         self.headless = headless
         self.screenshot_each_step = screenshot_each_step
         self.step_delay_s = step_delay_s
         self.text_limit = text_limit
+        self.html_limit = html_limit
 
     def run_loop(
         self,
@@ -112,6 +114,11 @@ class ActionRunner:
         except Exception:
             text = ""
         text = (text or "")[: self.text_limit]
+        try:
+            html = page.content()
+        except Exception:
+            html = ""
+        html = (html or "")[: self.html_limit]
         links = []
         try:
             links = page.eval_on_selector_all(
@@ -125,6 +132,7 @@ class ActionRunner:
             "url": page.url,
             "title": title,
             "text": text,
+            "html": html,
             "links": links,
         }
 

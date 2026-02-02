@@ -48,12 +48,14 @@ class LLMActionAgent:
             f"{i+1}. {item.get('type')} {item}" for i, item in enumerate(history[-10:])
         )
         state_text = state.get("text", "")
+        state_html = state.get("html", "")
         links = state.get("links", [])
         links_text = "\n".join(f"- {l['text']} -> {l['href']}" for l in links)
         system = (
             "You control a browser. Use the actions to navigate, scroll, and extract. "
             "Always respond with JSON only. Avoid leaving the site unless necessary. "
             "Take small steps and extract data once found. "
+            "Use the provided HTML to choose precise selectors when helpful. "
             "The selector field must contain a CSS selector string (no placeholders like 'css')."
         )
         if self.instructions:
@@ -63,6 +65,7 @@ class LLMActionAgent:
             f"Current URL: {state.get('url')}\n"
             f"Title: {state.get('title')}\n\n"
             f"Page Text (truncated):\n{state_text}\n\n"
+            f"Page HTML (truncated):\n{state_html}\n\n"
             f"Visible Links:\n{links_text}\n\n"
             f"Recent Actions:\n{history_text}\n\n"
             f"Schema:\n{ACTION_SCHEMA}"

@@ -112,6 +112,15 @@ def _normalize_action(action: Dict[str, Any]) -> None:
     value = action.get("value")
     selector = action.get("selector")
 
+    if isinstance(selector, str):
+        trimmed = selector.strip()
+        lower = trimmed.lower()
+        if lower.startswith("css="):
+            selector = trimmed[4:].strip()
+        elif lower.startswith("css "):
+            selector = trimmed[4:].strip()
+        action["selector"] = selector
+
     if action_type in ("click", "fill", "press", "extract"):
         if (not selector or selector == "css") and value:
             action["selector"] = value
