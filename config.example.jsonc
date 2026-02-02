@@ -1,0 +1,17 @@
+{
+  // LLM provider: ollama or azure
+  "llm": {
+    "provider": "ollama",
+    "model": "gemma3:4b",
+    "base_url": "http://127.0.0.1:11434",
+  },
+
+  // High-level goal for the agent
+  "goal": "Find the pricing page and extract the plan names.",
+
+  // Extra system instructions passed to the agent
+  "instructions": "Stay on the same domain when possible. Scroll before clicking pagination.",
+
+  // Max number of browser steps
+  "max_depth": 12,
+}
