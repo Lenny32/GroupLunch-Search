@@ -17,6 +17,7 @@ def test_load_config(tmp_path):
         '  "llm": {"provider": "ollama", "model": "llama3.1", "base_url": "http://localhost:11434"},\n'
         '  "goal": "Do the thing",\n'
         '  "instructions": "Stay focused",\n'
+        '  "headless": false,\n'
         '  "max_depth": 3\n'
         '}\n',
         encoding="utf-8",
@@ -25,6 +26,7 @@ def test_load_config(tmp_path):
     assert cfg.provider == "ollama"
     assert cfg.model == "llama3.1"
     assert cfg.base_url == "http://localhost:11434"
+    assert cfg.headless is False
     assert cfg.goal == "Do the thing"
     assert cfg.instructions == "Stay focused"
     assert cfg.max_depth == 3

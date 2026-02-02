@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ from playwright.sync_api import sync_playwright, Page, Browser
 
 from .agent import LLMActionAgent
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class RunResult:
@@ -72,11 +74,14 @@ class ActionRunner:
             )
             page = context.new_page()
             page.set_default_timeout(15000)
+            logger.info("Browser started headless=%s ua=%s", self.headless, ua)
 
             for step in range(max_steps):
+                logger.info("Step %s/%s url=%s", step + 1, max_steps, page.url)
                 state = self._capture_state(page)
                 actions = self.agent.next_actions(task, state, history)
                 for action in actions:
+                    logger.info("Action: %s", action)
                     result = self._execute_action(
                         page, action, output_dir, step, screenshots, allowed_hosts
                     )
@@ -87,11 +92,13 @@ class ActionRunner:
                 if self.screenshot_each_step:
                     shot = self._save_screenshot(page, output_dir, f"step_{step+1}")
                     screenshots.append(shot)
+                    logger.debug("Saved step screenshot: %s", shot)
 
                 time.sleep(self.step_delay_s)
 
             context.close()
             browser.close()
+            logger.info("Browser closed")
 
         return RunResult(history=history, extractions=extractions, screenshots=screenshots)
 
@@ -113,6 +120,7 @@ class ActionRunner:
             )
         except Exception:
             links = []
+        logger.debug("Captured state title=%s text_len=%s links=%s", title, len(text), len(links))
         return {
             "url": page.url,
             "title": title,
@@ -130,35 +138,40 @@ class ActionRunner:
         allowed_hosts: Optional[List[str]],
     ) -> Optional[Dict]:
         action_type = action.get("type")
-        if action_type == "goto":
-            url = action.get("url")
-            if url and _is_allowed(url, allowed_hosts):
-                page.goto(url, wait_until="domcontentloaded")
-        elif action_type == "click":
-            page.click(action.get("selector"))
-        elif action_type == "fill":
-            page.fill(action.get("selector"), action.get("text"))
-        elif action_type == "press":
-            page.press(action.get("selector"), action.get("key"))
-        elif action_type == "wait":
-            page.wait_for_timeout(int(action.get("ms")))
-        elif action_type == "scroll":
-            pixels = int(action.get("pixels", 800))
-            if action.get("direction") == "up":
-                pixels = -abs(pixels)
-            page.evaluate("window.scrollBy(0, arguments[0])", pixels)
-        elif action_type == "extract":
-            selector = action.get("selector") or "body"
-            name = action.get("name", f"extract_{step+1}")
-            try:
-                text = page.inner_text(selector)
-            except Exception:
-                text = ""
-            return {"name": name, "selector": selector, "text": text}
-        elif action_type == "screenshot":
-            name = action.get("name", f"shot_{step+1}")
-            shot = self._save_screenshot(page, output_dir, name)
-            screenshots.append(shot)
+        try:
+            if action_type == "goto":
+                url = action.get("url")
+                if url and _is_allowed(url, allowed_hosts):
+                    page.goto(url, wait_until="domcontentloaded")
+            elif action_type == "click":
+                page.click(action.get("selector"))
+            elif action_type == "fill":
+                page.fill(action.get("selector"), action.get("text"))
+            elif action_type == "press":
+                page.press(action.get("selector"), action.get("key"))
+            elif action_type == "wait":
+                page.wait_for_timeout(int(action.get("ms")))
+            elif action_type == "scroll":
+                pixels = int(action.get("pixels", 800))
+                if action.get("direction") == "up":
+                    pixels = -abs(pixels)
+                page.evaluate("window.scrollBy(0, arguments[0])", pixels)
+            elif action_type == "extract":
+                selector = action.get("selector") or "body"
+                name = action.get("name", f"extract_{step+1}")
+                try:
+                    text = page.inner_text(selector)
+                except Exception:
+                    text = ""
+                logger.info("Extracted %s chars from %s", len(text), selector)
+                return {"name": name, "selector": selector, "text": text}
+            elif action_type == "screenshot":
+                name = action.get("name", f"shot_{step+1}")
+                shot = self._save_screenshot(page, output_dir, name)
+                screenshots.append(shot)
+                logger.info("Saved screenshot: %s", shot)
+        except Exception as exc:
+            logger.warning("Action failed type=%s error=%s", action_type, exc)
         return None
 
     def _save_screenshot(self, page: Page, output_dir: str, name: str) -> str:

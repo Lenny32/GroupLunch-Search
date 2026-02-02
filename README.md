@@ -40,6 +40,12 @@ python -m app.main --task "Find the pricing page and extract the plan names" --p
 
 Screenshots and extractions are saved under `runs/`.
 
+Enable debug logging:
+
+```
+set LOG_LEVEL=DEBUG
+```
+
 ## Start
 
 Run with a task:
@@ -97,6 +103,7 @@ For Ollama, set `llm.model` in the config to choose the model. For Azure OpenAI,
 `llm.deployment` (or `llm.model` as an alias) to select the deployment name.
 For Ollama on another machine, set `llm.base_url` to the reachable URL.
 If `llm.model` is omitted, the app will try to pick the first installed model from Ollama.
+Set `headless` to `false` to show the browser for debugging.
 
 ## Docker (Option A)
 

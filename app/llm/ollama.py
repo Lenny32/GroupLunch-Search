@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Dict, Optional
 from urllib.parse import urlparse, urlunparse
@@ -6,6 +7,7 @@ import requests
 
 from .base import LLMClient
 
+logger = logging.getLogger(__name__)
 
 def _in_docker() -> bool:
     if os.path.exists("/.dockerenv"):
@@ -67,6 +69,7 @@ class OllamaClient(LLMClient):
         chat_url = f"{self.base_url}/api/chat"
         resp = requests.post(chat_url, json=payload, timeout=self.timeout_s)
         if resp.status_code == 404:
+            logger.debug("Ollama /api/chat not found, falling back to /api/generate")
             generate_url = f"{self.base_url}/api/generate"
             gen_payload = {
                 "model": self.model,
@@ -96,7 +99,9 @@ class OllamaClient(LLMClient):
             data = resp.json()
             models = data.get("models", [])
             if models:
-                return models[0].get("name")
+                model = models[0].get("name")
+                logger.info("Using default Ollama model: %s", model)
+                return model
         except requests.RequestException:
             return None
         return None

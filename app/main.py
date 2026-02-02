@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from datetime import datetime
 from typing import List, Optional
@@ -7,6 +8,8 @@ from .agent import LLMActionAgent
 from .browser import ActionRunner
 from .config import load_config
 from .llm import build_client
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -20,6 +23,14 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--show-browser", action="store_true", default=False)
     parser.add_argument("--allowed-hosts", default="")
     return parser.parse_args()
+
+
+def _setup_logging() -> None:
+    level = os.getenv("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
 
 
 def _load_task(args: argparse.Namespace) -> str:
@@ -39,6 +50,7 @@ def _parse_allowed_hosts(raw: str) -> Optional[List[str]]:
 
 
 def main() -> None:
+    _setup_logging()
     args = _parse_args()
     config = load_config(args.config) if args.config else None
     task = config.goal if config else _load_task(args)
@@ -46,11 +58,22 @@ def main() -> None:
         "runs", datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     )
     headless = not args.show_browser
+    if config and config.headless is not None:
+        headless = bool(config.headless)
 
     provider = config.provider if config else args.provider
     model = config.model if config else None
     deployment = config.deployment if config else None
     base_url = config.base_url if config else None
+    logger.info(
+        "Starting run provider=%s model=%s deployment=%s base_url=%s steps=%s headless=%s",
+        provider,
+        model,
+        deployment,
+        base_url,
+        config.max_depth if config else args.max_steps,
+        headless,
+    )
     client = build_client(provider, model=model, deployment=deployment, base_url=base_url)
     agent = LLMActionAgent(client, instructions=(config.instructions if config else ""))
     runner = ActionRunner(agent, headless=headless)

@@ -12,6 +12,7 @@ class AppConfig:
     model: Optional[str]
     deployment: Optional[str]
     base_url: Optional[str]
+    headless: Optional[bool]
 
 
 def _strip_json_comments(text: str) -> str:
@@ -87,6 +88,7 @@ def load_config(path: str) -> AppConfig:
     model = llm.get("model") or payload.get("model")
     deployment = llm.get("deployment") or payload.get("deployment")
     base_url = llm.get("base_url") or payload.get("base_url")
+    headless = payload.get("headless")
 
     if not provider:
         raise ValueError("Config must include llm.provider or provider")
@@ -101,4 +103,5 @@ def load_config(path: str) -> AppConfig:
         model=model,
         deployment=deployment,
         base_url=base_url,
+        headless=headless,
     )

@@ -12,6 +12,9 @@
   // Extra system instructions passed to the agent
   "instructions": "Stay on the same domain when possible. Scroll before clicking pagination.",
 
+  // Run browser headless (false shows the browser)
+  "headless": true,
+
   // Max number of browser steps
   "max_depth": 12,
 }

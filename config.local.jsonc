@@ -1,0 +1,12 @@
+{
+  // Local config (edit as needed)
+  "llm": {
+    "provider": "ollama",
+    "model": "gemma3:4b",
+    "base_url": "http://localhost:11434"
+  },
+  "goal": "Open http://127.0.0.1:8000/index.html and extract the lunch menu items",
+  "instructions": "Stay on the site and extract the menu list.",
+  "headless": false,
+  "max_depth": 10
+}

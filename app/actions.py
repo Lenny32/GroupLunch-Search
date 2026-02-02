@@ -63,6 +63,9 @@ def parse_actions(raw_text: str, max_actions: int = 8) -> ParsedActions:
 
     sanitized: List[Dict[str, Any]] = []
     for action in actions[:max_actions]:
+        if not isinstance(action, dict):
+            return ParsedActions(actions=[], error="Each action must be an object.")
+        _normalize_action(action)
         valid, err = _validate_action(action)
         if not valid:
             return ParsedActions(actions=[], error=err)
@@ -72,8 +75,6 @@ def parse_actions(raw_text: str, max_actions: int = 8) -> ParsedActions:
 
 
 def _validate_action(action: Any) -> Tuple[bool, str]:
-    if not isinstance(action, dict):
-        return False, "Each action must be an object."
     action_type = action.get("type")
     if action_type not in ALLOWED_ACTIONS:
         return False, f"Unsupported action type: {action_type}"
@@ -104,3 +105,17 @@ def _validate_action(action: Any) -> Tuple[bool, str]:
             action["name"] = "screenshot"
 
     return True, ""
+
+
+def _normalize_action(action: Dict[str, Any]) -> None:
+    action_type = action.get("type")
+    value = action.get("value")
+    selector = action.get("selector")
+
+    if action_type in ("click", "fill", "press", "extract"):
+        if (not selector or selector == "css") and value:
+            action["selector"] = value
+
+    if action_type == "goto":
+        if not action.get("url") and value:
+            action["url"] = value

@@ -1,8 +1,10 @@
+import logging
 from typing import Dict, List
 
 from .actions import parse_actions
 from .llm.base import LLMClient
 
+logger = logging.getLogger(__name__)
 ACTION_SCHEMA = """
 Return ONLY valid JSON with this shape:
 {
@@ -27,9 +29,12 @@ class LLMActionAgent:
 
     def next_actions(self, task: str, state: Dict, history: List[Dict]) -> List[Dict]:
         messages = self._build_messages(task, state, history)
+        logger.debug("Requesting actions. url=%s title=%s", state.get("url"), state.get("title"))
         raw = self.client.chat(messages)
+        logger.debug("LLM response length=%s", len(raw or ""))
         parsed = parse_actions(raw)
         if parsed.error:
+            logger.warning("LLM response parse error: %s", parsed.error)
             return [
                 {
                     "type": "wait",
@@ -48,7 +53,8 @@ class LLMActionAgent:
         system = (
             "You control a browser. Use the actions to navigate, scroll, and extract. "
             "Always respond with JSON only. Avoid leaving the site unless necessary. "
-            "Take small steps and extract data once found."
+            "Take small steps and extract data once found. "
+            "The selector field must contain a CSS selector string (no placeholders like 'css')."
         )
         if self.instructions:
             system = f"{system}\n\nExtra instructions:\n{self.instructions}"

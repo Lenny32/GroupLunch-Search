@@ -1,9 +1,12 @@
+import logging
 import os
-import requests
 from typing import List, Dict
+
+import requests
 
 from .base import LLMClient
 
+logger = logging.getLogger(__name__)
 
 class AzureOpenAIClient(LLMClient):
     def __init__(
@@ -33,6 +36,7 @@ class AzureOpenAIClient(LLMClient):
             "messages": messages,
             "temperature": 0,
         }
+        logger.debug("Azure OpenAI request deployment=%s api_version=%s", self.deployment, self.api_version)
         resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout_s)
         resp.raise_for_status()
         data = resp.json()
