@@ -1,1 +1,0 @@
-Find the pricing page and extract the plan names. Navigate by clicking and scrolling. Save screenshots.

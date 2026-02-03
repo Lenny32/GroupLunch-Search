@@ -1,0 +1,38 @@
+[
+  {
+    "dish": "Minestrone (Italienische Tomaten-Gemüsesuppe)",
+    "price": "3,50"
+  },
+  {
+    "dish": "Lauchcremesuppe",
+    "price": "3,50"
+  },
+  {
+    "dish": "Rindergeschnetzeltes süß-sauer mit Wok-Gemüse und Basmatireis",
+    "price": "11,90"
+  },
+  {
+    "dish": "Rosa gebratenes Schweinsfilet mit Pfeffersauce, dazu Braterdäpfeln und Speckfisolen",
+    "price": "AUS"
+  },
+  {
+    "dish": "Pasta Penne mit gebratene Hühnerfiletstreifen in Käserahmsauce und Broccoliröschen, dazu Blattsalat",
+    "price": "10,90"
+  },
+  {
+    "dish": "Erdäpfel-Karfiollaibchen mit Schnittlauchsauce und Blattsalat",
+    "price": "9,90"
+  },
+  {
+    "dish": "Überbackene Fleischlasagne und Blattsalat",
+    "price": "AUS"
+  },
+  {
+    "dish": "Hausgemachte Schokomuffins mit Schokosauce und Schlagobers",
+    "price": "3,90"
+  },
+  {
+    "dish": "Überbackene Topfenpalatschinken mit Vanillesauce",
+    "price": "3,90"
+  }
+]

@@ -1,24 +1,38 @@
-# Agent Instructions
+# AGENTS
 
-Project: GroupLunch-Search
+## Project overview
 
-- Primary language: Python 3.11+.
-- Browser automation: Playwright (Chromium).
-- LLM providers: Ollama (local) and Azure OpenAI (cloud), configurable via env/CLI.
-- Favor small, composable modules; keep side effects in `app/main.py`.
-- Tests: `pytest` under `tests/`. Avoid external network in tests; prefer local fixtures.
-- Formatting: standard PEP8; keep files ASCII-only unless necessary.
-- Always validate work before responding: build Docker image, run a functional check, then remove the image. Do not finish a task without attempting this checklist.
+This project is a Node.js + Playwright runner where an LLM orchestrates browser actions to find and extract a lunch menu (dish names + prices).
 
-Common commands:
-- Create venv: `python -m venv .venv`
-- Activate venv (PowerShell): `.\.venv\Scripts\Activate.ps1`
-- Install deps: `python -m pip install -r requirements.txt`
-- Install browser: `python -m playwright install chromium`
-- Run app: `python -m app.main --task "..."`
-- Run tests: `python -m pytest`
+## Key commands
 
-Post-work checklist (do after EACH task):
-- Build Docker image: `docker build -t group-lunch-search .`
-- Functional check: run a basic command (task or config)
-- Remove image: `docker rmi group-lunch-search`
+- Install deps: `npm install`
+- Install browsers: `npx playwright install`
+- Run with config: `npm run start`
+
+## Files to know
+
+- `src/index.js`: main loop and tool schema for LLM actions.
+- `src/browser.js`: Playwright actions implementation + element snapshots.
+- `src/llm.js`: LLM client for `ollama` and OpenAI-compatible endpoints.
+- `src/config.js`: config defaults and validation.
+- `schemas/action.schema.json`: action JSON schema (Ajv).
+- `docs/CONFIGURATION.md`: config schema.
+- `docs/ARCHITECTURE.md`: action protocol and control flow.
+
+## LLM action contract
+
+The LLM must return a single JSON object with `type` and the relevant fields. Supported types: `click`, `type`, `scroll`, `wait`, `navigate`, `screenshot`, `extract`, `done`. Extraction content must be an array of `{ dish, price }` objects. Responses are validated against `schemas/action.schema.json`.
+
+## Adding features
+
+- New action types: update `src/browser.js`, `schemas/action.schema.json`, and the tool schema in `src/index.js`.
+- New LLM providers: extend `src/llm.js` with another payload/response mapping and add config flags.
+- More observability: extend `src/logger.js` and add structured log fields in `src/index.js`.
+
+## Guardrails
+
+- Keep responses strict JSON for the LLM output.
+- Preserve config-driven behavior (no hard-coded URLs or models).
+- Avoid large payloads; respect `maxHtmlChars`, `maxTextChars`, and `snapshotsLimit`.
+- Maintain headless support.\n- If a modal/fullscreen popup blocks the page, have the LLM close it before other actions.

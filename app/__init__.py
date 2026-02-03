@@ -1,1 +1,0 @@
-"""GroupLunch-Search application package."""

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM Action",
+  "type": "object",
+  "required": ["type"],
+  "additionalProperties": true,
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["click", "type", "scroll", "wait", "navigate", "screenshot", "extract", "done"]
+    },
+    "reason": { "type": "string" },
+    "selector": { "type": "string" },
+    "x": { "type": "number" },
+    "y": { "type": "number" },
+    "text": { "type": "string" },
+    "submit": { "type": "boolean" },
+    "direction": { "type": "string", "enum": ["up", "down"] },
+    "amount": { "type": "number" },
+    "ms": { "type": "number" },
+    "url": { "type": "string" },
+    "name": { "type": "string" },
+    "fullPage": { "type": "boolean" },
+    "format": { "type": "string", "enum": ["json"] },
+    "content": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dish", "price"],
+        "additionalProperties": true,
+        "properties": {
+          "dish": { "type": "string", "minLength": 1 },
+          "price": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "click" } }, "required": ["type"] },
+      "then": {
+        "anyOf": [
+          { "required": ["selector"] },
+          { "required": ["x", "y"] }
+        ]
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "type" } }, "required": ["type"] },
+      "then": { "required": ["selector"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "navigate" } }, "required": ["type"] },
+      "then": { "required": ["url"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "extract" } }, "required": ["type"] },
+      "then": { "required": ["content"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "done" } }, "required": ["type"] },
+      "then": { "required": ["content"] }
+    }
+  ]
+}

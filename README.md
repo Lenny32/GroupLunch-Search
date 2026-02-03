@@ -1,167 +1,50 @@
-# GroupLunch-Search
+# GroupLunch-Search2
 
-LLM-driven Chromium runner using Playwright. Supports Ollama locally and Azure OpenAI in the cloud. The LLM controls clicks, scrolling, and extraction through a JSON action protocol.
+LLM-orchestrated Playwright runner that navigates a website, finds the lunch menu, and extracts dish names with prices. The LLM decides each browser action (click, scroll, type, screenshot) based on the current page state.
 
 ## Quick start
 
-1. Install dependencies
+1) Install dependencies
 
 ```
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m pip install -r requirements-dev.txt
-python -m playwright install chromium
+npm install
+npx playwright install
 ```
 
-2. Configure LLM
-
-### Ollama (local)
+2) Copy and edit the config
 
 ```
-set OLLAMA_MODEL=llama3.1
-set OLLAMA_BASE_URL=http://localhost:11434
+copy config.example.json config.json
 ```
 
-### Azure OpenAI (cloud)
+3) Run
 
 ```
-set AZURE_OPENAI_ENDPOINT=https://YOUR_RESOURCE.openai.azure.com
-set AZURE_OPENAI_API_KEY=YOUR_KEY
-set AZURE_OPENAI_DEPLOYMENT=YOUR_DEPLOYMENT
-set AZURE_OPENAI_API_VERSION=2024-06-01
+npm run start
 ```
 
-3. Run
+The extraction result is written to `extracted-menu.json`.
 
-```
-python -m app.main --task "Find the pricing page and extract the plan names" --provider ollama
-```
+## How it works
 
-Screenshots and extractions are saved under `runs/`.
+- Chromium opens the `targetUrl` (headless or not).
+- HTML, visible text, element snapshots, and optional screenshots are sent to the LLM.
+- The LLM responds with a JSON action.
+- The app executes the action via Playwright.
+- The loop continues until the LLM returns `type: "extract"` or `"done"`.
 
-Enable debug logging:
+## Configuration
 
-```
-set LOG_LEVEL=DEBUG
-```
+See `docs/CONFIGURATION.md` for the full schema and examples.
 
-## Start
+## Debugging
 
-Run with a task:
+Set `debugLevel` to `debug` or `trace` to see request/response payloads and action logs. Screenshots for each step are stored in `screenshotDir`.
 
-```
-python -m app.main --task "Open website and try to novaigate the website and find the lunch menu. Once you found it, try to extract the content of the lunch menu in a json [{`"meal`": `"food`", `"price`": 5.3}]" --config config.local.jsonc
-```
+## Notes
 
-Run with config:
+- `llmApiType` supports `ollama` (default dev), `openai` (OpenAI-compatible chat endpoint), and `azure` (Azure OpenAI deployments).
+- Ollama structured outputs are enabled by default; set `structuredOutputs` to `false` if you want raw output.
+- The LLM must return strict JSON. If it responds with invalid JSON or missing dish/price fields, the runner logs a warning and re-asks on the next step.\n- If a modal or fullscreen popup blocks the page, the LLM should close it before proceeding.
+- The HTML, visible text, and element snapshots are truncated to control token usage.
 
-```
-python -m app.main --config config.example.jsonc
-```
-
-## Local test website (5 pages)
-
-Start the local mock site (Windows/macOS/Linux):
-
-```
-python scripts/serve_site5.py --port 8000
-```
-
-Open in a browser:
-
-```
-http://127.0.0.1:8000/index.html
-```
-
-Run the Docker image against the mock site (Windows/macOS):
-
-```
-docker run --rm -e LLM_PROVIDER=ollama -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
-  group-lunch-search --task "Open http://host.docker.internal:8000/index.html and extract the lunch menu items"
-```
-
-Linux Docker:
-
-```
-docker run --rm --add-host=host.docker.internal:host-gateway \
-  -e LLM_PROVIDER=ollama -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
-  group-lunch-search --task "Open http://host.docker.internal:8000/index.html and extract the lunch menu items"
-```
-
-Replace the `OLLAMA_BASE_URL` with your reachable Ollama URL if it differs (for example, a LAN IP).
-
-## Config file (JSON with comments)
-
-Use a JSONC config file to set the provider, instructions, max depth, and goal:
-
-```
-python -m app.main --config config.example.jsonc
-```
-
-For Ollama, set `llm.model` in the config to choose the model. For Azure OpenAI, use
-`llm.deployment` (or `llm.model` as an alias) to select the deployment name.
-For Ollama on another machine, set `llm.base_url` to the reachable URL.
-If `llm.model` is omitted, the app will try to pick the first installed model from Ollama.
-Set `headless` to `false` to show the browser for debugging.
-
-## Docker (Option A)
-
-Build:
-
-```
-docker build -t group-lunch-search .
-```
-
-Run (use Ollama on host):
-
-```
-docker run --rm -e LLM_PROVIDER=ollama -e OLLAMA_BASE_URL=http://host.docker.internal:11434 group-lunch-search \
-  --task "Find the help page and extract the main title"
-```
-
-Inside Docker, if you set `OLLAMA_BASE_URL` to `http://127.0.0.1:11434` or `http://localhost:11434`,
-the app will automatically rewrite it to `http://host.docker.internal:11434`.
-
-If you use Linux Docker, add a host mapping and keep the same URL:
-
-```
-docker run --rm --add-host=host.docker.internal:host-gateway \
-  -e LLM_PROVIDER=ollama -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
-  group-lunch-search --task "Find the help page and extract the main title"
-```
-
-Using `127.0.0.1` inside the container points to the container itself, not your host.
-
-## Action protocol
-
-The LLM must return JSON only:
-
-```json
-{
-  "actions": [
-    { "type": "goto", "url": "https://example.com" },
-    { "type": "click", "selector": "a[href*='pricing']" },
-    { "type": "scroll", "direction": "down", "pixels": 900 },
-    { "type": "extract", "selector": "main", "name": "main_content" }
-  ]
-}
-```
-
-## Tests
-
-```
-python -m pytest
-```
-
-The integration test uses a local HTML fixture; no external network required.
-
-## Post-work checklist
-
-After each change:
-
-```
-docker build -t group-lunch-search .
-docker run --rm group-lunch-search --help
-docker rmi group-lunch-search
-```
